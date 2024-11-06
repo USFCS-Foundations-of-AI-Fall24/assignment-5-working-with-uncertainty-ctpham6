@@ -13,16 +13,46 @@ import joblib
 
 digits = load_digits()
 X, y = digits.data, digits.target
-scores = []
+scores_10_g = []
+scores_10_e = []
+scores_25_g = []
+scores_25_e = []
+scores_50_g = []
+scores_50_e = []
 kf = KFold(n_splits=5)
 for train_index, test_index in kf.split(X) :
     X_train, X_test, y_train, y_test = \
         (X[train_index], X[test_index], y[train_index], y[test_index])
-    clf = tree.DecisionTreeClassifier()
-    clf.fit(X_train, y_train)
-    scores.append(clf.score(X_test, y_test))
-
-print(scores)
+    rand_forest_10_g = RandomForestClassifier(n_estimators=10, criterion='gini')
+    rand_forest_10_g.fit(X_train, y_train)
+    scores_10_g.append(rand_forest_10_g.score(X_test, y_test))
+    rand_forest_10_e = RandomForestClassifier(n_estimators=10, criterion='entropy')
+    rand_forest_10_e.fit(X_train, y_train)
+    scores_10_e.append(rand_forest_10_e.score(X_test, y_test))
+    rand_forest_25_g = RandomForestClassifier(n_estimators=25, criterion = 'gini')
+    rand_forest_25_g.fit(X_train, y_train)
+    scores_25_g.append(rand_forest_25_g.score(X_test, y_test))
+    rand_forest_25_e = RandomForestClassifier(n_estimators=25, criterion='entropy')
+    rand_forest_25_e.fit(X_train, y_train)
+    scores_25_e.append(rand_forest_25_e.score(X_test, y_test))
+    rand_forest_50_g = RandomForestClassifier(n_estimators=50, criterion = 'gini')
+    rand_forest_50_g.fit(X_train, y_train)
+    scores_50_g.append(rand_forest_50_g.score(X_test, y_test))
+    rand_forest_50_e = RandomForestClassifier(n_estimators=50, criterion='entropy')
+    rand_forest_50_e.fit(X_train, y_train)
+    scores_50_e.append(rand_forest_50_e.score(X_test, y_test))
+print("Estimators: 10, Separator: Gini")
+print(scores_10_g)
+print("Estimators: 10, Separator: Entropy")
+print(scores_10_e)
+print("Estimators: 25, Separator: Gini")
+print(scores_25_g)
+print("Estimators: 25, Separator: Entropy")
+print(scores_25_e)
+print("Estimators: 50, Separator: Gini")
+print(scores_50_g)
+print("Estimators: 50, Separator: Entropy")
+print(scores_50_e)
 
 ## Part 2. This code (from https://scikit-learn.org/1.5/auto_examples/ensemble/plot_forest_hist_grad_boosting_comparison.html)
 ## shows how to use GridSearchCV to do a hyperparameter search to compare two techniques.
@@ -42,10 +72,10 @@ models = {
     ),
 }
 param_grids = {
-    "Random Forest": {"n_estimators": [10, 20, 50, 100]},
-    "Hist Gradient Boosting": {"max_iter": [10, 20, 50, 100, 300, 500]},
+    "Random Forest": {"n_estimators": [5, 10, 15, 20]},
+    "Hist Gradient Boosting": {"max_iter": [25, 50, 75, 100]},
 }
-cv = KFold(n_splits=2, shuffle=True, random_state=0)
+cv = KFold(n_splits=5, shuffle=True, random_state=0)
 
 results = []
 for name, model in models.items():
