@@ -47,11 +47,12 @@ class HMM:
                 if loop == 0:
                     if splitted[0] not in self.transitions:
                         self.transitions[splitted[0]] = {}
-                    self.transitions[splitted[0]][splitted[1]] = float(splitted[2].strip())
+                    self.transitions[splitted[0]][splitted[1]] = splitted[2].strip()
                 else:
                     if splitted[0] not in self.emissions:
                         self.emissions[splitted[0]] = {}
-                    self.emissions[splitted[0]][splitted[1]] = float(splitted[2].strip())
+                    self.emissions[splitted[0]][splitted[1]] = splitted[2].strip()
+            reading_file.close()
             loop += 1
 
 
