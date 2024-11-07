@@ -28,8 +28,6 @@ class HMM:
               'grumpy': {'silent': '0.5', 'meow': '0.4', 'purr': '0.1'},
               'hungry': {'silent': '0.2', 'meow': '0.6', 'purr': '0.2'}}"""
 
-
-
         self.transitions = transitions
         self.emissions = emissions
 
@@ -38,7 +36,24 @@ class HMM:
         """reads HMM structure from transition (basename.trans),
         and emission (basename.emit) files,
         as well as the probabilities."""
-        pass
+        loop = 0
+        while loop < 2 :
+            if loop == 0 :
+                reading_file = open(basename + ".trans", 'r')
+            else :
+                reading_file = open(basename + ".emit", 'r')
+            for line in reading_file:
+                splitted = line.split(" ")
+                if loop == 0:
+                    if splitted[0] not in self.transitions:
+                        self.transitions[splitted[0]] = {}
+                    self.transitions[splitted[0]][splitted[1]] = float(splitted[2].strip())
+                else:
+                    if splitted[0] not in self.emissions:
+                        self.emissions[splitted[0]] = {}
+                    self.emissions[splitted[0]][splitted[1]] = float(splitted[2].strip())
+            loop += 1
+
 
 
    ## you do this.
@@ -61,8 +76,7 @@ class HMM:
     ## You do this. Given a sequence with a list of emissions, fill in the most likely
     ## hidden states using the Viterbi algorithm.
 
+if __name__ == "__main__" :
 
-
-
-
-
+    h = HMM()
+    h.load('cat')
