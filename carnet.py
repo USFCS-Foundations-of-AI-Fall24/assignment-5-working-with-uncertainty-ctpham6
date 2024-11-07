@@ -7,7 +7,8 @@ car_model = BayesianNetwork(
         ("Battery", "Ignition"),
         ("Ignition","Starts"),
         ("Gas","Starts"),
-        ("Starts","Moves")
+        ("Starts","Moves"),
+        ("KeysPresent", "Starts")
     ]
 )
 
@@ -45,10 +46,14 @@ cpd_ignition = TabularCPD(
 cpd_starts = TabularCPD(
     variable="Starts",
     variable_card=2,
-    values=[[0.95, 0.05, 0.05, 0.001], [0.05, 0.95, 0.95, 0.9999]],
-    evidence=["Ignition", "Gas"],
-    evidence_card=[2, 2],
-    state_names={"Starts":['yes','no'], "Ignition":["Works", "Doesn't work"], "Gas":['Full',"Empty"]},
+    values=[[0.99, 0.01, 0.01, 0.01, 0.95, 0.05, 0.05, 0.001],
+            [0.01, 0.99, 0.99, 0.99, 0.05, 0.95, 0.95, 0.9999]],
+    evidence=["Ignition", "Gas", "KeysPresent"],
+    evidence_card=[2, 2, 2],
+    state_names={"Starts":['yes','no'],
+                 "Ignition":["Works", "Doesn't work"],
+                 "Gas":['Full',"Empty"],
+                 "KeysPresent":["yes", "no"]},
 )
 
 cpd_moves = TabularCPD(
@@ -60,9 +65,14 @@ cpd_moves = TabularCPD(
                  "Starts": ['yes', 'no'] }
 )
 
+cpd_key = TabularCPD(
+    variable="KeysPresent", variable_card=2, values=[[0.70], [0.30]],
+    state_names={"KeysPresent": ["yes", "no"]}
+)
+
 
 # Associating the parameters with the model structure
-car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, cpd_moves)
+car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, cpd_moves, cpd_key)
 
 car_infer = VariableElimination(car_model)
 
@@ -87,6 +97,10 @@ if __name__ == "__main__" :
     # What is the probability that the car starts if the radio works and it has gas in it?
     print("What is the probability that the car starts if the radio works and it has gas in it?")
     print(car_infer.query(variables=["Starts"], evidence={"Radio": "turns on", "Gas": "Full"}))
+    print()
+    # Probability that the key is not present given that the car does not move
+    print("Probability that the key is not present given that the car does not move")
+    print(car_infer.query(variables=["KeysPresent"], evidence={"Moves": "no"}))
     print()
 
 else :
