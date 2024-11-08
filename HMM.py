@@ -5,6 +5,7 @@ import argparse
 import codecs
 import os
 import numpy
+import sys
 
 # Sequence - represents a sequence of hidden states and corresponding
 # output variables.
@@ -60,7 +61,25 @@ class HMM:
    ## you do this.
     def generate(self, n):
         """return an n-length Sequence by randomly sampling from this HMM."""
-        pass
+        if n < 1:
+            return Sequence([], [])
+
+        i = 1
+        stateseq = []
+        outputseq = []
+        while i <= n :
+            if len(stateseq) == 0 :
+                possible_next_states = self.transitions["#"]
+            else :
+                possible_next_states = self.transitions[stateseq[-1]]
+
+            next_state = random.choices(list(possible_next_states.keys()), weights = [float(weight) for weight in possible_next_states.values()], k=1)
+            stateseq.append(next_state[0])
+            emission = random.choices(list(self.emissions[next_state[0]].keys()), weights = [float(weight) for weight in self.emissions[next_state[0]].values()], k=1)
+            outputseq.append(emission[0])
+            i += 1
+
+        return Sequence(stateseq, outputseq)
 
     def forward(self, sequence):
         pass
@@ -79,5 +98,27 @@ class HMM:
 
 if __name__ == "__main__" :
 
+    base_name = 'cat'
+    sequence_length = 20
+    if len(sys.argv) < 1:
+        print("Usage: HMM.py basename (such that basename.emit and basename.py)")
+        sys.exit(-1)
+    if "--generate" in sys.argv :
+        try:
+            sequence_length = int(sys.argv[sys.argv.index("--generate") + 1])
+        except:
+            print("Usage: HMM.py basename (such that basename.emit and basename.py)")
+            print("Optional parameters include --generate [int] to specify the length of the sequence")
+            sys.exit(-1)
+
+    try:
+        base_name = sys.argv[1]
+    except:
+        print("Usage: HMM.py basename (such that basename.emit and basename.py)")
+        sys.exit(-1)
+
     h = HMM()
-    h.load('cat')
+    h.load(base_name)
+    sequence = h.generate(sequence_length)
+    print(" ".join(sequence.stateseq))
+    print(" ".join(sequence.outputseq))
