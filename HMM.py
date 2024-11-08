@@ -32,7 +32,6 @@ class HMM:
         self.transitions = transitions
         self.emissions = emissions
 
-    ## part 1 - you do this.
     def load(self, basename):
         """reads HMM structure from transition (basename.trans),
         and emission (basename.emit) files,
@@ -56,9 +55,6 @@ class HMM:
             reading_file.close()
             loop += 1
 
-
-
-   ## you do this.
     def generate(self, n):
         """return an n-length Sequence by randomly sampling from this HMM."""
         if n < 1:
@@ -82,7 +78,40 @@ class HMM:
         return Sequence(stateseq, outputseq)
 
     def forward(self, sequence):
-        pass
+
+        vertibi = {'-': {}}
+        backpointers = {}
+
+        # Setup. # - 1.0  Everything else - 0.0
+        vertibi['-']['#'] = 1.0
+        previous_state = "#"
+        for emission in self.emissions:
+            vertibi['-'][emission] = 0.0
+
+        back_index = 0
+        for generated_emission in sequence:
+            vertibi[generated_emission] = {}
+            backpointers[generated_emission] = {}
+            vertibi[generated_emission]['#'] = 0.0
+            for emission in self.emissions:
+                if previous_state == "#" :
+                    vertibi[generated_emission][emission] = round(
+                        float(self.emissions[emission][generated_emission]) * float(
+                            self.transitions[previous_state][emission]) * vertibi['-'][previous_state], 2)
+                else :
+                    vals = []
+                    for test_emission in self.emissions:
+                        vals.append(round(float(self.emissions[emission][generated_emission]) * float(
+                            self.transitions[previous_state][emission]) * vertibi['-'][test_emission], 2))
+                    vertibi[generated_emission][emission] = max(vals)
+                    back_index = vals.index(max(vals)) + 1
+            for emission in self.emissions:
+                if previous_state == "#" :
+                    backpointers[generated_emission][emission] = 0.0
+                else :
+                    backpointers[generated_emission][emission] = back_index
+            previous_state = max(vertibi[generated_emission], key=vertibi[generated_emission].get)
+        return vertibi
     ## you do this: Implement the Viterbi algorithm. Given a Sequence with a list of emissions,
     ## determine the most likely sequence of states.
 
@@ -103,22 +132,25 @@ if __name__ == "__main__" :
     if len(sys.argv) < 1:
         print("Usage: HMM.py basename (such that basename.emit and basename.py)")
         sys.exit(-1)
-    if "--generate" in sys.argv :
-        try:
-            sequence_length = int(sys.argv[sys.argv.index("--generate") + 1])
-        except:
-            print("Usage: HMM.py basename (such that basename.emit and basename.py)")
-            print("Optional parameters include --generate [int] to specify the length of the sequence")
-            sys.exit(-1)
 
     try:
         base_name = sys.argv[1]
     except:
         print("Usage: HMM.py basename (such that basename.emit and basename.py)")
         sys.exit(-1)
-
     h = HMM()
     h.load(base_name)
-    sequence = h.generate(sequence_length)
-    print(" ".join(sequence.stateseq))
-    print(" ".join(sequence.outputseq))
+
+    if "--generate" in sys.argv :
+        try:
+            sequence_length = int(sys.argv[sys.argv.index("--generate") + 1])
+            sequence = h.generate(sequence_length)
+            print(" ".join(sequence.stateseq))
+            print(" ".join(sequence.outputseq))
+        except:
+            print("Usage: HMM.py basename (such that basename.emit and basename.py)")
+            print("Optional parameters include --generate [int] to specify the length of the sequence")
+            sys.exit(-1)
+
+    if "--forward" in sys.argv :
+        print(h.forward(["purr", "silent", "silent", "meow", "meow"]))
