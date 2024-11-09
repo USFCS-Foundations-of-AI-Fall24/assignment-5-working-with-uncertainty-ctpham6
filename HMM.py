@@ -98,15 +98,10 @@ class HMM:
                         inner_index += 1
                     vertibi_matrix[index + 1].append(sum(p_list))
 
-
-        return vertibi_matrix
-    ## you do this: Implement the Viterbi algorithm. Given a Sequence with a list of emissions,
-    ## determine the most likely sequence of states.
-
-
-
-
-
+        likely_sequence = []
+        for day in range(len(vertibi_matrix)) :
+            likely_sequence.append(list(self.emissions.keys())[vertibi_matrix[day].index(max(vertibi_matrix[day])) - 1])
+        return likely_sequence[1:]
 
     def viterbi(self, sequence):
         pass
@@ -128,7 +123,7 @@ if __name__ == "__main__" :
         sys.exit(-1)
     h = HMM()
     h.load(base_name)
-
+    sequence = Sequence([], [])
     if "--generate" in sys.argv :
         try:
             sequence_length = int(sys.argv[sys.argv.index("--generate") + 1])
@@ -141,7 +136,10 @@ if __name__ == "__main__" :
             sys.exit(-1)
 
     if "--forward" in sys.argv :
-        print(h.forward(["purr", "silent", "silent", "meow", "meow"]))
+        # if len(sequence.stateseq) <= 0 :
+        #     sequence = h.generate(10)
+        # print(h.forward(sequence))
+        print(" ".join(h.forward(["purr", "silent", "silent", "meow", "meow"])))
 
     if "--vertibi" in sys.argv:
-        print("WOW")
+        print(h.viterbi(["purr", "silent", "silent", "meow", "meow"]))
