@@ -79,39 +79,27 @@ class HMM:
 
     def forward(self, sequence):
 
-        vertibi = {'-': {}}
-        backpointers = {}
+        vertibi_matrix = [[]]
+        vertibi_matrix[0].append(1.0)
+        for possible_emission in self.emissions.keys():
+            vertibi_matrix[0].append(float(0.0))
 
-        # Setup. # - 1.0  Everything else - 0.0
-        vertibi['-']['#'] = 1.0
-        previous_state = "#"
-        for emission in self.emissions:
-            vertibi['-'][emission] = 0.0
+        for index in range(len(sequence)):
+            vertibi_matrix.append([])
+            vertibi_matrix[index + 1].append(float(0.0))
+            for possible_emission in self.emissions.keys() :
+                if index == 0 :
+                    vertibi_matrix[index + 1].append(round(float(self.emissions[possible_emission][sequence[index]]) * float(self.transitions["#"][possible_emission]), 3))
+                else :
+                    inner_index = 1
+                    p_list = []
+                    for prev_emission in self.emissions.keys():
+                        p_list.append(float(self.emissions[possible_emission][sequence[index]]) * float(self.transitions[prev_emission][possible_emission]) * vertibi_matrix[index][inner_index])
+                        inner_index += 1
+                    vertibi_matrix[index + 1].append(sum(p_list))
 
-        back_index = 0
-        for generated_emission in sequence:
-            vertibi[generated_emission] = {}
-            backpointers[generated_emission] = {}
-            vertibi[generated_emission]['#'] = 0.0
-            for emission in self.emissions:
-                if previous_state == "#" :
-                    vertibi[generated_emission][emission] = round(
-                        float(self.emissions[emission][generated_emission]) * float(
-                            self.transitions[previous_state][emission]) * vertibi['-'][previous_state], 2)
-                else :
-                    vals = []
-                    for test_emission in self.emissions:
-                        vals.append(round(float(self.emissions[emission][generated_emission]) * float(
-                            self.transitions[previous_state][emission]) * vertibi['-'][test_emission], 2))
-                    vertibi[generated_emission][emission] = max(vals)
-                    back_index = vals.index(max(vals)) + 1
-            for emission in self.emissions:
-                if previous_state == "#" :
-                    backpointers[generated_emission][emission] = 0.0
-                else :
-                    backpointers[generated_emission][emission] = back_index
-            previous_state = max(vertibi[generated_emission], key=vertibi[generated_emission].get)
-        return vertibi
+
+        return vertibi_matrix
     ## you do this: Implement the Viterbi algorithm. Given a Sequence with a list of emissions,
     ## determine the most likely sequence of states.
 
@@ -154,3 +142,6 @@ if __name__ == "__main__" :
 
     if "--forward" in sys.argv :
         print(h.forward(["purr", "silent", "silent", "meow", "meow"]))
+
+    if "--vertibi" in sys.argv:
+        print("WOW")
