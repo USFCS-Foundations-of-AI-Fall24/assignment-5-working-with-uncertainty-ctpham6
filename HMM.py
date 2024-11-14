@@ -83,10 +83,10 @@ class HMM:
 
         sequence_to_return = self.viterbi(sequence)
 
-        # Lander unique case where it checks if the rover is in a safe area according to its scanner
-        if len(sequence_to_return) > 0 :
-            if sequence_to_return[0] == "1,1":
-                if sequence_to_return[-1] in ["2,5", "3,4", "4,3", "4,4", "5,5"]:
+        if len(sequence_to_return.stateseq) > 0 :
+            if sequence_to_return.stateseq[0] == "1,1":
+                print(sequence_to_return.stateseq[-1], "is the likely current location")
+                if sequence_to_return.stateseq[-1] in ["2,5", "3,4", "4,3", "4,4", "5,5"]:
                     print("SAFE To Land")
                 else:
                     print("NOT SAFE To Land")
@@ -179,7 +179,7 @@ if __name__ == "__main__" :
                         sequences.append(h.forward(Sequence([], line.strip().split(" "))))
                 print("FORWARD RESULTS:\n")
                 for sequence in sequences:
-                    print(sequence.stateseq[-1], "is the most likely final state")
+                    print(sequence.stateseq[-1], "- is the most likely final state")
                     print("of")
                     print(" ".join(sequence.outputseq))
                     print()
@@ -247,3 +247,11 @@ if __name__ == "__main__" :
                 "Given ONLY the emission sequence, here is what the forward algorithm THINKS the most likely inputs are: ")
             print(sequence_copy.stateseq)
             print("How accurate is it?")
+
+    print(
+        "The results have finished printing. Viterbi outputs something that I am satisfied with.\n"
+        "However, there is always a possibility that it will be working with SMALL numbers. If I use Math.round,\n"
+        "then I can get the results shown in the pptx example. However, with it, smaller numbers would be treated as 0,\n"
+        "and results will be weird. I apologize but I need to not round to get a good answer that is not\n"
+        "ADJ ADJ ADJ ADJ for the sentence flies went to sleep or something\n"
+        "- Colin Pham")
