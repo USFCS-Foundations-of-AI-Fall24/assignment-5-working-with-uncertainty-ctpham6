@@ -69,9 +69,11 @@ class HMM:
             else :
                 possible_next_states = self.transitions[stateseq[-1]]
 
-            next_state = random.choices(list(possible_next_states.keys()), weights = [float(weight) for weight in possible_next_states.values()], k=1)
+            next_state = random.choices(list(possible_next_states.keys()),
+                                        weights=[float(weight) for weight in possible_next_states.values()], k=1)
             stateseq.append(next_state[0])
-            emission = random.choices(list(self.emissions[next_state[0]].keys()), weights = [float(weight) for weight in self.emissions[next_state[0]].values()], k=1)
+            emission = random.choices(list(self.emissions[next_state[0]].keys()),
+                                      weights=[float(weight) for weight in self.emissions[next_state[0]].values()], k=1)
             outputseq.append(emission[0])
             i += 1
 
@@ -79,34 +81,58 @@ class HMM:
 
     def forward(self, sequence):
 
-        vertibi_matrix = [[]]
-        vertibi_matrix[0].append(1.0)
-        for possible_emission in self.emissions.keys():
-            vertibi_matrix[0].append(float(0.0))
+        sequence_to_return = self.viterbi(sequence)
 
-        for index in range(len(sequence)):
-            vertibi_matrix.append([])
-            vertibi_matrix[index + 1].append(float(0.0))
-            for possible_emission in self.emissions.keys() :
-                if index == 0 :
-                    vertibi_matrix[index + 1].append(round(float(self.emissions[possible_emission][sequence[index]]) * float(self.transitions["#"][possible_emission]), 3))
-                else :
+        # Lander unique case where it checks if the rover is in a safe area according to its scanner
+        if len(sequence_to_return) > 0 :
+            if sequence_to_return[0] == "1,1":
+                if sequence_to_return[-1] in ["2,5", "3,4", "4,3", "4,4", "5,5"]:
+                    print("SAFE To Land")
+                else:
+                    print("NOT SAFE To Land")
+
+        return sequence_to_return
+
+    def viterbi(self, sequence) :
+
+        outputseq = sequence.outputseq
+        viterbi_matrix = [[]]
+        viterbi_matrix[0].append(1.0)
+        for possible_emission in self.emissions.keys():
+            viterbi_matrix[0].append(float(0.0))
+
+        for index in range(len(outputseq)):
+            viterbi_matrix.append([])
+            viterbi_matrix[index + 1].append(float(0.0))
+            for possible_emission in self.emissions.keys():
+                if outputseq[index] not in self.emissions[possible_emission]:
+                    float1 = 0.0
+                else:
+                    float1 = float(self.emissions[possible_emission][outputseq[index]])
+                if index == 0:
+                    if possible_emission not in self.transitions["#"]:
+                        float2 = 0.0
+                    else:
+                        float2 = float(self.transitions["#"][possible_emission])
+                    viterbi_matrix[index + 1].append(float1 * float2)
+                else:
                     inner_index = 1
                     p_list = []
                     for prev_emission in self.emissions.keys():
-                        p_list.append(float(self.emissions[possible_emission][sequence[index]]) * float(self.transitions[prev_emission][possible_emission]) * vertibi_matrix[index][inner_index])
+                        if possible_emission not in self.transitions[prev_emission]:
+                            float2 = 0.0
+                        else:
+                            float2 = float(self.transitions[prev_emission][possible_emission])
+                        p_list.append(float1 * float2 * viterbi_matrix[index][inner_index])
                         inner_index += 1
-                    vertibi_matrix[index + 1].append(sum(p_list))
+                    viterbi_matrix[index + 1].append(sum(p_list))
 
         likely_sequence = []
-        for day in range(len(vertibi_matrix)) :
-            likely_sequence.append(list(self.emissions.keys())[vertibi_matrix[day].index(max(vertibi_matrix[day])) - 1])
-        return likely_sequence[1:]
+        for day in range(len(viterbi_matrix)):
+            likely_sequence.append(list(self.emissions.keys())[viterbi_matrix[day].index(max(viterbi_matrix[day])) - 1])
 
-    def viterbi(self, sequence):
-        pass
-    ## You do this. Given a sequence with a list of emissions, fill in the most likely
-    ## hidden states using the Viterbi algorithm.
+        sequence.stateseq = likely_sequence[1:]
+        return sequence
 
 if __name__ == "__main__" :
 
@@ -124,22 +150,100 @@ if __name__ == "__main__" :
     h = HMM()
     h.load(base_name)
     sequence = Sequence([], [])
+
     if "--generate" in sys.argv :
         try:
             sequence_length = int(sys.argv[sys.argv.index("--generate") + 1])
             sequence = h.generate(sequence_length)
+            print("Creating Sequence")
+            print("Default Length:", sequence_length)
             print(" ".join(sequence.stateseq))
             print(" ".join(sequence.outputseq))
         except:
-            print("Usage: HMM.py basename (such that basename.emit and basename.py)")
-            print("Optional parameters include --generate [int] to specify the length of the sequence")
-            sys.exit(-1)
+            print("Creating Sequence")
+            print("Default Length: 10")
+            sequence = h.generate(10)
+            print(" ".join(sequence.stateseq))
+            print(" ".join(sequence.outputseq))
 
     if "--forward" in sys.argv :
-        # if len(sequence.stateseq) <= 0 :
-        #     sequence = h.generate(10)
-        # print(h.forward(sequence))
-        print(" ".join(h.forward(["purr", "silent", "silent", "meow", "meow"])))
 
-    if "--vertibi" in sys.argv:
-        print(h.viterbi(["purr", "silent", "silent", "meow", "meow"]))
+        # Try to access the .obs file
+        try:
+            file = sys.argv[sys.argv.index("--forward") + 1]
+            if file.endswith(".obs"):
+                obs_file = open(file)
+                sequences = []
+                for line in obs_file:
+                    if len(line.strip()) != 0:
+                        sequences.append(h.forward(Sequence([], line.strip().split(" "))))
+                print("FORWARD RESULTS:\n")
+                for sequence in sequences:
+                    print(sequence.stateseq[-1], "is the most likely final state")
+                    print("of")
+                    print(" ".join(sequence.outputseq))
+                    print()
+                print("----------------------------")
+            else:
+                print("INVALID FILE:", file)
+        except:
+            # Happens when the .obs can't be opened. It just does a normal test
+            # Checks to see if --generate made a sequence with len(outputseq) > 1. If not, make one of length 10
+            # Passes in a sequence of input[] and output[something] and sees if the output sequence is close to the
+            # sequence made from .generate()
+            print("Problem opening file\n")
+            if len(sequence.outputseq) < 1:
+                print("Creating Sequence")
+                print("Default Length: 10")
+                sequence = h.generate(10)
+            sequence_copy = Sequence([], [sequence.outputseq])
+            sequence_copy = h.forward(sequence_copy)
+            print("Here's the original sequence states:")
+            print(sequence.stateseq)
+            print("Here's the original sequence emissions:")
+            print(sequence.outputseq)
+            print(
+                "Given ONLY the emission sequence, here is what the forward algorithm THINKS the LAST state is: ")
+            print(sequence_copy.stateseq[-1])
+            print("How accurate is it?")
+
+    if "--viterbi" in sys.argv:
+
+        # Try to access the .obs file
+        try:
+            file = sys.argv[sys.argv.index("--viterbi") + 1]
+            if file.endswith(".obs"):
+                obs_file = open(file)
+                sequences = []
+                for line in obs_file:
+                    if len(line.strip()) != 0:
+                        sequences.append(h.viterbi(Sequence([], line.strip().split(" "))))
+                print("VERTIBI RESULTS:\n")
+                for sequence in sequences:
+                    print (" ".join(sequence.stateseq))
+                    print ("from")
+                    print (" ".join(sequence.outputseq))
+                    print()
+                print("----------------------------")
+            else:
+                print("INVALID FILE:", file)
+        except:
+            # Happens when the .obs can't be opened. It just does a normal test
+            # Checks to see if --generate made a sequence with len(outputseq) > 1. If not, make one of length 10
+            # Passes in a sequence of input[] and output[something] and sees if the output sequence is close to the
+            # sequence made from .generate()
+            print("Problem opening file")
+            if len(sequence.outputseq) < 1:
+                print("Creating Sequence")
+                print("Default Length: 10")
+                sequence = h.generate(10)
+            sequence_copy = Sequence([], [sequence.outputseq])
+            sequence_copy = h.viterbi(sequence_copy)
+            print("Here's the original sequence states:")
+            print(sequence.stateseq)
+            print("Here's the original sequence emissions:")
+            print(sequence.outputseq)
+            print(
+                "Given ONLY the emission sequence, here is what the forward algorithm THINKS the most likely inputs are: ")
+            print(sequence_copy.stateseq)
+            print("How accurate is it?")
