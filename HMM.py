@@ -220,8 +220,10 @@ if __name__ == "__main__" :
                         sequences.append(h.viterbi(Sequence([], line.strip().split(" "))))
                 print("VERTIBI RESULTS:\n")
                 for sequence in sequences:
+                    print("State Sequence")
                     print (" ".join(sequence.stateseq))
                     print ("from")
+                    print("Output Sequence")
                     print (" ".join(sequence.outputseq))
                     print()
                 print("----------------------------")
@@ -248,10 +250,10 @@ if __name__ == "__main__" :
             print(sequence_copy.stateseq)
             print("How accurate is it?")
 
-    print(
-        "The results have finished printing. Viterbi outputs something that I am satisfied with.\n"
-        "However, there is always a possibility that it will be working with SMALL numbers. If I use Math.round,\n"
-        "then I can get the results shown in the pptx example. However, with it, smaller numbers would be treated as 0,\n"
-        "and results will be weird. I apologize but I need to not round to get a good answer that is not\n"
-        "ADJ ADJ ADJ ADJ for the sentence flies went to sleep or something\n"
-        "- Colin Pham")
+    # print(
+    #     "The results have finished printing. Viterbi outputs something that I am satisfied with.\n"
+    #     "However, there is always a possibility that it will be working with SMALL numbers. If I use Math.round,\n"
+    #     "then I can get the results shown in the pptx example. However, with it, smaller numbers would be treated as 0,\n"
+    #     "and results will be weird. I apologize but I need to not round to get a good answer that is not\n"
+    #     "ADJ ADJ ADJ ADJ for the sentence flies went to sleep or something\n"
+    #     "- Colin Pham")
