@@ -1,0 +1,51 @@
+Assignment 5 Comments:
+
+sklearn:
+
+new dataset. 5/5
+
+random forest 5/5
+
+GridSearchCV 5/5
+
+Scatterplot 5/5
+
+Belief Networks:
+
+alarm queries 5/5
+
+car queries 5/5
+
+additional node 5/5
+
+HMM:
+
+load 5/5
+
+generate 10/10
+
+lander models 5/5
+
+forward 7/10 - you're calling Viterbi from forward, which seems odd.
+
+viterbi 11/15 - Viterbi should use max rather than sum to select the most 
+probable prior state.
+ 
+
+Utility:
+
+q1 4/5
+Rt 3 is 106.8min
+
+q2 5/5
+
+q3 1/2 - not rocky: 121 minutes - if it's rocky, we take rt1 instead.
+
+q4 3/3
+
+q5 2/2
+
+q6 0/3 Since route 1 is better either way, the satellite is not helpful.
+
+88/100
+
